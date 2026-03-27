@@ -37,6 +37,12 @@ async function fetchViaGraphql(lotIds) {
   const query = `query GetHomesiteDetails($lotIds: [String!]!) {
   homesiteList(lotIds: $lotIds) {
     id
+    elevationImage {
+      image {
+        url
+        alt
+      }
+    }
     name
     number
     closingCostIncentive
@@ -87,6 +93,7 @@ async function fetchViaGraphql(lotIds) {
     const community = h?.plan?.community?.name || "";
     const city = h?.plan?.community?.cityName || DEFAULT_CITY;
     const plan = h?.plan?.name || h?.name || "";
+    const imageUrl = h?.elevationImage?.image?.url || "";
     const incentive = h?.closingCostIncentive
       ? `Closing cost incentive: ${h.closingCostIncentive}`
       : "";
@@ -106,6 +113,7 @@ async function fetchViaGraphql(lotIds) {
       baths: parseNumber(h?.baths) + (parseNumber(h?.halfBaths) ? 0.5 : 0),
       sqft: parseNumber(h?.sqft),
       incentive,
+      imageUrl,
       sourceUrl,
     };
   });

@@ -9,6 +9,7 @@ export function normalizeListing(raw) {
     baths: Number(raw.baths || 0),
     sqft: Number(raw.sqft || 0),
     incentive: raw.incentive || "",
+    imageUrl: raw.imageUrl || "",
     sourceUrl: raw.sourceUrl || "",
     updatedAt: new Date().toISOString(),
   };
