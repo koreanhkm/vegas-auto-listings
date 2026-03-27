@@ -346,6 +346,10 @@
               <option value="">All cities</option>
             </select>
 
+            <select id="areaFilter" class="control">
+              <option value="">All areas</option>
+            </select>
+
             <div class="chips" aria-label="beds filter">
               <div class="chip" data-beds="">Any beds</div>
               <div class="chip" data-beds="3">3+</div>
@@ -402,7 +406,31 @@
       }
 
       function normalizeCity(s) {
-        return String(s || "").trim();
+        const raw = String(s || "").trim();
+        if (!raw) return "";
+        const lower = raw.toLowerCase();
+        if (lower === "las vegas" || lower === "las vegs" || lower === "lasvegas") return "Las Vegas";
+        if (lower === "henderson") return "Henderson";
+        if (lower === "north las vegas" || lower === "n. las vegas" || lower === "n las vegas") return "North Las Vegas";
+        return raw
+          .toLowerCase()
+          .replace(/\b\w/g, (m) => m.toUpperCase());
+      }
+
+      function deriveAreaTag(item) {
+        const city = normalizeCity(item.city || "");
+        const community = String(item.community || "").toLowerCase();
+        const plan = String(item.plan || "").toLowerCase();
+        const url = String(item.sourceUrl || "").toLowerCase();
+        const text = `${community} ${plan} ${url}`;
+
+        if (city === "Henderson") return "Henderson";
+        if (city === "North Las Vegas") return "North Las Vegas";
+        if (/(summerlin)/i.test(text)) return "Summerlin";
+        if (/(northwest|skye canyon|centennial|aliante)/i.test(text)) return "Northwest";
+        if (/(southwest|mountain'?s edge|mountains edge|southern highlands|blue diamond)/i.test(text))
+          return "Southwest";
+        return "Other";
       }
 
       async function loadListings() {
@@ -415,6 +443,7 @@
 
         state.all = Array.isArray(data.items) ? data.items : [];
         hydrateCityFilter(state.all);
+        hydrateAreaFilter(state.all);
         hydrateBuilderChips(state.all);
         applyFilters();
       }
@@ -431,6 +460,15 @@
         select.innerHTML = `<option value="">All cities</option>` +
           cities.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
         select.value = cities.includes(current) ? current : "";
+      }
+
+      function hydrateAreaFilter(items) {
+        const areas = uniqueSorted(items.map((i) => deriveAreaTag(i)).filter(Boolean));
+        const select = document.getElementById("areaFilter");
+        const current = select.value;
+        select.innerHTML = `<option value="">All areas</option>` +
+          areas.map((a) => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join("");
+        select.value = areas.includes(current) ? current : "";
       }
 
       function escapeHtml(str) {
@@ -493,11 +531,13 @@
 
       function applyFilters() {
         const city = document.getElementById("cityFilter").value;
+        const area = document.getElementById("areaFilter").value;
         const minPrice = parsePriceInput("minPrice");
         const maxPrice = parsePriceInput("maxPrice");
 
         const items = state.all.filter((i) => {
           if (city && normalizeCity(i.city) !== city) return false;
+          if (area && deriveAreaTag(i) !== area) return false;
           if (state.bedsMin && Number(i.beds || 0) < state.bedsMin) return false;
           if (state.builderSet.size && !state.builderSet.has(String(i.builder || "").trim())) return false;
           const p = Number(i.price || 0);
@@ -515,6 +555,7 @@
 
       function clearFilters() {
         document.getElementById("cityFilter").value = "";
+        document.getElementById("areaFilter").value = "";
         document.getElementById("minPrice").value = "";
         document.getElementById("maxPrice").value = "";
         state.bedsMin = 0;
@@ -551,7 +592,8 @@
         items.forEach((i) => {
           const el = document.createElement("div");
           el.className = "card";
-          const city = escapeHtml(i.city || "");
+          const city = escapeHtml(normalizeCity(i.city || ""));
+          const area = escapeHtml(deriveAreaTag(i));
           const builder = escapeHtml(i.builder || "");
           const community = escapeHtml(i.community || "");
           const plan = escapeHtml(i.plan || "");
@@ -576,7 +618,7 @@
               <div class="content">
                 <div class="kicker">
                   <div>${builder} · ${community}</div>
-                  <div>${city}</div>
+                  <div>${area}${city ? ` · ${city}` : ""}</div>
                 </div>
                 <div class="title">${plan || "Listing"}</div>
                 <div class="price">${money(i.price)}</div>
@@ -620,6 +662,7 @@
         });
 
         document.getElementById("cityFilter").addEventListener("change", applyFilters);
+        document.getElementById("areaFilter").addEventListener("change", applyFilters);
         document.getElementById("minPrice").addEventListener("keydown", (e) => {
           if (e.key === "Enter") applyFilters();
         });
