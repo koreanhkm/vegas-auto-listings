@@ -47,11 +47,13 @@ async function fetchViaGraphql(lotIds) {
     number
     closingCostIncentive
     status
+    badge
     address
     baths
     halfBaths
     beds
     price
+    wasPrice
     formattedPrice
     sqft
     url
@@ -94,6 +96,9 @@ async function fetchViaGraphql(lotIds) {
     const city = h?.plan?.community?.cityName || DEFAULT_CITY;
     const plan = h?.plan?.name || h?.name || "";
     const imageUrl = h?.elevationImage?.image?.url || "";
+    const status = String(h?.status || "").trim();
+    const badge = String(h?.badge || "").trim();
+    const wasPrice = parseNumber(h?.wasPrice);
     const incentive = h?.closingCostIncentive
       ? `Closing cost incentive: ${h.closingCostIncentive}`
       : "";
@@ -109,10 +114,13 @@ async function fetchViaGraphql(lotIds) {
       plan,
       city,
       price: parseNumber(h?.price || h?.formattedPrice),
+      wasPrice,
       beds: parseNumber(h?.beds),
       baths: parseNumber(h?.baths) + (parseNumber(h?.halfBaths) ? 0.5 : 0),
       sqft: parseNumber(h?.sqft),
       incentive,
+      status,
+      badge,
       imageUrl,
       sourceUrl,
     };

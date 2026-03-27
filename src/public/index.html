@@ -228,6 +228,29 @@
         flex-wrap: wrap;
         margin-top: 10px;
       }
+      .flags{
+        display:flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .flag{
+        border: 1px solid var(--hair);
+        background: rgba(255,255,255,.06);
+        padding: 7px 10px;
+        border-radius: 999px;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 12px;
+        color: rgba(255,255,255,.84);
+      }
+      .flag.good{
+        border-color: rgba(73,209,122,.45);
+        background: rgba(73,209,122,.12);
+      }
+      .flag.warn{
+        border-color: rgba(214,179,106,.55);
+        background: rgba(214,179,106,.12);
+      }
       .spec{
         border: 1px solid var(--hair);
         background: rgba(255,255,255,.05);
@@ -448,6 +471,14 @@
           const incentive = (i.incentive || "").trim();
           const sourceUrl = escapeHtml(i.sourceUrl || "#");
           const imageUrl = escapeHtml(i.imageUrl || "");
+          const statusRaw = String(i.status || "").trim();
+          const badgeRaw = String(i.badge || "").trim();
+          const wasPrice = Number(i.wasPrice || 0);
+          const price = Number(i.price || 0);
+          const priceCut = wasPrice && price && wasPrice > price ? (wasPrice - price) : 0;
+          const moveInReady =
+            /move[\s-]?in\s*ready/i.test(statusRaw) ||
+            /move[\s-]?in\s*ready/i.test(badgeRaw);
 
           el.innerHTML = `
             <div class="cardInner">
@@ -462,6 +493,11 @@
                 </div>
                 <div class="title">${plan || "Listing"}</div>
                 <div class="price">${money(i.price)}</div>
+                <div class="flags">
+                  ${moveInReady ? `<div class="flag good">Move‑in ready</div>` : ""}
+                  ${priceCut ? `<div class="flag warn">Price cut: ${money(priceCut)}</div>` : ""}
+                  ${badgeRaw && !moveInReady ? `<div class="flag">${escapeHtml(badgeRaw)}</div>` : ""}
+                </div>
                 <div class="specs">
                   <div class="spec">${Number(i.beds || 0) || "—"} bd</div>
                   <div class="spec">${Number(i.baths || 0) || "—"} ba</div>
