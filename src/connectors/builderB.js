@@ -39,72 +39,37 @@ async function algoliaMultiQuery({ appId, apiKey, requests }) {
 }
 
 function mapHitToListing(hit) {
-  const community =
-    pickFirstString(
-      hit.community_name,
-      hit.community,
-      hit.communityTitle,
-      hit.communityName,
-      hit.mpc_name,
-      hit.mpc,
-      hit.neighborhood
-    ) || "";
+  // Tri Pointe Algolia fields (confirmed from your Response JSON)
+  const community = pickFirstString(hit.community, hit.neighborhood) || "";
+  const plan = pickFirstString(hit.floor_plan, hit.title, hit.floorplan) || "";
+  const city = Array.isArray(hit.cities) ? pickFirstString(hit.cities[0], "Las Vegas") : "Las Vegas";
 
-  const plan =
-    pickFirstString(
-      hit.title,
-      hit.name,
-      hit.floorplan_name,
-      hit.floorplan,
-      hit.plan_name,
-      hit.plan
-    ) || "";
+  const price = parseNumber(pickFirstString(hit.display_price, hit.min_price, hit.max_price));
+  const wasPrice = 0; // not present in this index response
 
-  const city =
-    pickFirstString(
-      hit.city,
-      hit.cityName,
-      hit.city_name,
-      hit.market_name,
-      "Las Vegas"
-    ) || "Las Vegas";
+  const beds = parseNumber(pickFirstString(hit.min_bedrooms, hit.max_bedrooms));
+  const baths = parseNumber(pickFirstString(hit.min_bathrooms, hit.max_bathrooms));
+  const sqft = parseNumber(pickFirstString(hit.min_sq_feet, hit.max_sq_feet));
 
-  const price = parseNumber(
-    pickFirstString(
-      hit.display_price,
-      hit.price,
-      hit.min_price,
-      hit.starting_price,
-      hit.base_price
-    )
-  );
-  const wasPrice = parseNumber(pickFirstString(hit.was_price, hit.previous_price));
-
-  const beds = parseNumber(pickFirstString(hit.bedrooms, hit.beds, hit.max_bedrooms));
-  const baths = parseNumber(pickFirstString(hit.bathrooms, hit.baths, hit.max_bathrooms));
-  const sqft = parseNumber(pickFirstString(hit.sqft, hit.square_feet, hit.max_sqft));
-
-  const status = pickFirstString(
-    hit.home_status,
-    hit.status,
-    hit.availability,
-    hit.availability_status
-  );
-
-  const badge = pickFirstString(hit.badge, hit.label, hit.tag);
+  const status = pickFirstString(hit.home_status, hit.availability_status);
+  const badge = pickFirstString(hit.type, hit.tpg_status);
 
   const imageUrl = pickFirstString(
-    hit.image,
-    hit.image_url,
-    hit.imageUrl,
-    hit.thumbnail,
-    hit.thumbnail_url,
-    hit.photo
+    hit?.image?.medium_large,
+    hit?.image?.medium,
+    hit?.image?.large,
+    hit?.image?.thumbnail,
+    hit?.neighborhood_data?.image?.medium_large,
+    hit?.neighborhood_data?.image?.medium,
+    hit?.neighborhood_data?.image?.thumbnail
   );
 
-  const sourceUrl =
-    pickFirstString(hit.url, hit.permalink, hit.absolute_url, hit.link) ||
-    (hit.slug ? `https://www.tripointehomes.com${hit.slug}` : "");
+  const rel = pickFirstString(hit.url);
+  const sourceUrl = rel ? `https://www.tripointehomes.com${rel}` : "";
+
+  const promoHeadline = pickFirstString(hit?.promotion?.headline);
+  const promoType = pickFirstString(hit?.promotion?.type);
+  const incentive = promoHeadline ? `${promoType ? `${promoType}: ` : ""}${promoHeadline}` : "";
 
   return {
     builder: "Tri Pointe Homes",
@@ -119,8 +84,7 @@ function mapHitToListing(hit) {
     status,
     badge,
     imageUrl,
-    // incentives often live on the detail page; keep empty for now
-    incentive: "",
+    incentive,
     sourceUrl,
   };
 }
@@ -135,27 +99,36 @@ export async function fetchBuilderB() {
     return [];
   }
 
-  // These indices were visible in your payload; homes index is the one we want to render.
-  const homesIndex = getEnv("BUILDER_B_HOMES_INDEX", "production_homes");
+  // Use the same index your Response shows for Las Vegas sorted by price.
+  const indexName = getEnv("BUILDER_B_INDEX", "production_homes_price_asc");
   const hitsPerPage = Number(getEnv("BUILDER_B_HITS_PER_PAGE", "60")) || 60;
 
-  // Match your payload intent: exclude sold out, and require at least 2 bedrooms.
-  const facetFilters = JSON.stringify([[`submarket_slug:${marketSlug}`]]);
-  const numericFilters = encodeURIComponent("max_bedrooms >= 2");
-  const filters = encodeURIComponent('NOT home_status:"Sold Out"');
+  // Match your payload: submarket + type filters, bedrooms >= 2, exclude sold.
+  const facetFiltersObj = [
+    [`submarket_slug:${marketSlug}`],
+    ["type:Available Home"],
+  ];
+  const numericFiltersObj = ["max_bedrooms >= 2"];
+  const filters = 'NOT home_status:"Sold"';
 
-  const params = `query=&page=0&hitsPerPage=${hitsPerPage}&facetFilters=${encodeURIComponent(
-    facetFilters
-  )}&numericFilters=${numericFilters}&filters=${filters}`;
+  const params = [
+    "query=",
+    "page=0",
+    `hitsPerPage=${encodeURIComponent(String(hitsPerPage))}`,
+    `facets=${encodeURIComponent(JSON.stringify(["type"]))}`,
+    `facetFilters=${encodeURIComponent(JSON.stringify(facetFiltersObj))}`,
+    `numericFilters=${encodeURIComponent(JSON.stringify(numericFiltersObj))}`,
+    `filters=${encodeURIComponent(filters)}`,
+  ].join("&");
 
   const results = await algoliaMultiQuery({
     appId,
     apiKey,
-    requests: [{ indexName: homesIndex, params }],
+    requests: [{ indexName, params }],
   });
 
   const hits = results?.[0]?.hits || [];
-  const mapped = hits.map(mapHitToListing);
+  const mapped = hits.map(mapHitToListing).filter((x) => x.sourceUrl);
 
   // Dedup by sourceUrl
   const dedup = new Map();
