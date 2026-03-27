@@ -4,6 +4,7 @@ export function normalizeListing(raw) {
     community: raw.community || "",
     plan: raw.plan || "",
     city: raw.city || "Las Vegas",
+    zipCode: raw.zipCode || "",
     price: Number(raw.price || 0),
     wasPrice: Number(raw.wasPrice || 0),
     beds: Number(raw.beds || 0),

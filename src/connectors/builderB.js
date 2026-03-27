@@ -54,6 +54,7 @@ function mapHitToListing(hit) {
   const community = pickFirstString(hit.community, hit.neighborhood) || "";
   const plan = pickFirstString(hit.floor_plan, hit.title, hit.floorplan) || "";
   const city = Array.isArray(hit.cities) ? pickFirstString(hit.cities[0], "Las Vegas") : "Las Vegas";
+  const zipCode = pickFirstString(hit.zip_code);
 
   const price = pickFirstNumber(hit.display_price, hit.min_price, hit.max_price);
   const wasPrice = 0; // not present in this index response
@@ -87,6 +88,7 @@ function mapHitToListing(hit) {
     community,
     plan,
     city,
+    zipCode,
     price,
     wasPrice,
     beds,

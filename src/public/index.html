@@ -419,10 +419,23 @@
 
       function deriveAreaTag(item) {
         const city = normalizeCity(item.city || "");
+        const zip = String(item.zipCode || "").trim();
         const community = String(item.community || "").toLowerCase();
         const plan = String(item.plan || "").toLowerCase();
         const url = String(item.sourceUrl || "").toLowerCase();
         const text = `${community} ${plan} ${url}`;
+
+        // ZIP-first (cheap and consistent). These are broad buckets; we can tune later.
+        // Henderson
+        if (["89002","89011","89012","89014","89015","89044","89052"].includes(zip)) return "Henderson";
+        // North Las Vegas
+        if (["89030","89031","89032","89081","89084","89085"].includes(zip)) return "North Las Vegas";
+        // Summerlin (West/South)
+        if (["89134","89135","89138","89144","89145","89128"].includes(zip)) return "Summerlin";
+        // Northwest
+        if (["89131","89149","89166","89129"].includes(zip)) return "Northwest";
+        // Southwest
+        if (["89113","89118","89139","89141","89147","89148","89178","89179"].includes(zip)) return "Southwest";
 
         if (city === "Henderson") return "Henderson";
         if (city === "North Las Vegas") return "North Las Vegas";
