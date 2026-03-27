@@ -100,6 +100,13 @@
         align-items: center;
         margin-top: 12px;
       }
+      .filtersSection{
+        width: 100%;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
       .control{
         border: 1px solid var(--hair);
         background: rgba(255,255,255,.05);
@@ -135,6 +142,7 @@
         background: rgba(214,179,106,.18);
         color: var(--text);
       }
+      .chip.small{ padding: 7px 9px; font-size: 12px; }
       .meta{
         margin-top: 10px;
         color: var(--muted);
@@ -146,6 +154,11 @@
         display:grid;
         grid-template-columns: 1fr;
         gap: 12px;
+      }
+      .loadMoreWrap{
+        margin-top: 14px;
+        display:flex;
+        justify-content: center;
       }
       .card{
         border: 1px solid var(--hair);
@@ -328,27 +341,36 @@
         </div>
 
         <div class="filters" aria-label="filters">
-          <select id="cityFilter" class="control">
-            <option value="">All cities</option>
-          </select>
+          <div class="filtersSection" aria-label="core filters">
+            <select id="cityFilter" class="control">
+              <option value="">All cities</option>
+            </select>
 
-          <div class="chips" aria-label="beds filter">
-            <div class="chip" data-beds="">Any beds</div>
-            <div class="chip" data-beds="3">3+</div>
-            <div class="chip" data-beds="4">4+</div>
-            <div class="chip" data-beds="5">5+</div>
+            <div class="chips" aria-label="beds filter">
+              <div class="chip" data-beds="">Any beds</div>
+              <div class="chip" data-beds="3">3+</div>
+              <div class="chip" data-beds="4">4+</div>
+              <div class="chip" data-beds="5">5+</div>
+            </div>
+
+            <input id="minPrice" class="control" inputmode="numeric" placeholder="Min price" />
+            <input id="maxPrice" class="control" inputmode="numeric" placeholder="Max price" />
+            <button class="btn" onclick="applyFilters()">Apply</button>
+            <button class="btn" onclick="clearFilters()">Clear</button>
           </div>
 
-          <input id="minPrice" class="control" inputmode="numeric" placeholder="Min price" />
-          <input id="maxPrice" class="control" inputmode="numeric" placeholder="Max price" />
-          <button class="btn" onclick="applyFilters()">Apply</button>
-          <button class="btn" onclick="clearFilters()">Clear</button>
+          <div class="filtersSection" aria-label="builder filters">
+            <div class="chips" id="builderChips" aria-label="builder filter chips"></div>
+          </div>
         </div>
 
         <div id="meta" class="meta"></div>
       </div>
 
       <div id="list" class="grid"></div>
+      <div class="loadMoreWrap">
+        <button id="loadMoreBtn" class="btn" style="display:none" onclick="loadMore()">Load more</button>
+      </div>
       <div class="footer" id="footerNote"></div>
     </div>
 
@@ -364,6 +386,9 @@
         all: [],
         filtered: [],
         bedsMin: 0,
+        builderSet: new Set(),
+        pageSize: 20,
+        visibleCount: 20,
       };
 
       function money(n) {
@@ -390,6 +415,7 @@
 
         state.all = Array.isArray(data.items) ? data.items : [];
         hydrateCityFilter(state.all);
+        hydrateBuilderChips(state.all);
         applyFilters();
       }
 
@@ -422,6 +448,49 @@
         return cleaned ? Number(cleaned) : 0;
       }
 
+      function hydrateBuilderChips(items) {
+        const builders = uniqueSorted(items.map((i) => String(i.builder || "").trim()).filter(Boolean));
+        const root = document.getElementById("builderChips");
+        root.innerHTML = "";
+
+        // All builders chip (clears selection)
+        const allChip = document.createElement("div");
+        allChip.className = "chip small on";
+        allChip.dataset.builder = "";
+        allChip.innerText = "All builders";
+        allChip.addEventListener("click", () => {
+          state.builderSet = new Set();
+          setBuilderChipsUI(root);
+          applyFilters();
+        });
+        root.appendChild(allChip);
+
+        builders.forEach((b) => {
+          const chip = document.createElement("div");
+          chip.className = "chip small";
+          chip.dataset.builder = b;
+          chip.innerText = b;
+          chip.addEventListener("click", () => {
+            if (state.builderSet.has(b)) state.builderSet.delete(b);
+            else state.builderSet.add(b);
+            setBuilderChipsUI(root);
+            applyFilters();
+          });
+          root.appendChild(chip);
+        });
+
+        setBuilderChipsUI(root);
+      }
+
+      function setBuilderChipsUI(root) {
+        const hasSelection = state.builderSet.size > 0;
+        root.querySelectorAll(".chip").forEach((el) => {
+          const b = el.dataset.builder || "";
+          if (!b) el.classList.toggle("on", !hasSelection);
+          else el.classList.toggle("on", state.builderSet.has(b));
+        });
+      }
+
       function applyFilters() {
         const city = document.getElementById("cityFilter").value;
         const minPrice = parsePriceInput("minPrice");
@@ -430,6 +499,7 @@
         const items = state.all.filter((i) => {
           if (city && normalizeCity(i.city) !== city) return false;
           if (state.bedsMin && Number(i.beds || 0) < state.bedsMin) return false;
+          if (state.builderSet.size && !state.builderSet.has(String(i.builder || "").trim())) return false;
           const p = Number(i.price || 0);
           if (minPrice && p && p < minPrice) return false;
           if (maxPrice && p && p > maxPrice) return false;
@@ -437,7 +507,8 @@
         });
 
         state.filtered = items;
-        render(items);
+        state.visibleCount = state.pageSize;
+        render();
         document.getElementById("meta").innerText =
           `Showing: ${items.length} | Total: ${state.all.length} | Last Sync: ${window.__lastSyncAt || "—"}`;
       }
@@ -447,6 +518,8 @@
         document.getElementById("minPrice").value = "";
         document.getElementById("maxPrice").value = "";
         state.bedsMin = 0;
+        state.builderSet = new Set();
+        setBuilderChipsUI(document.getElementById("builderChips"));
         setBedsChip("");
         applyFilters();
       }
@@ -457,7 +530,13 @@
         });
       }
 
-      function render(items) {
+      function loadMore() {
+        state.visibleCount = Math.min(state.visibleCount + state.pageSize, state.filtered.length);
+        render();
+      }
+
+      function render() {
+        const items = state.filtered.slice(0, state.visibleCount);
         const list = document.getElementById("list");
         list.innerHTML = "";
 
@@ -520,6 +599,14 @@
           `;
           list.appendChild(el);
         });
+
+        const btn = document.getElementById("loadMoreBtn");
+        if (state.filtered.length > state.visibleCount) {
+          btn.style.display = "inline-flex";
+          btn.innerText = `Load more (${state.filtered.length - state.visibleCount} left)`;
+        } else {
+          btn.style.display = "none";
+        }
       }
 
       function wireEvents() {
