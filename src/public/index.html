@@ -2,47 +2,308 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Vegas New Home Listings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vegas New Construction</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 24px; max-width: 900px; }
-      h1 { margin-bottom: 8px; }
-      button { padding: 8px 12px; margin-right: 8px; cursor: pointer; }
-      .meta { color: #555; margin: 10px 0 20px; }
-      .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; margin: 10px 0; }
-      .row { margin: 4px 0; }
-      a { color: #0b57d0; text-decoration: none; }
+      :root{
+        --bg: #0b0c10;
+        --panel: rgba(255,255,255,.06);
+        --panel-2: rgba(255,255,255,.09);
+        --text: rgba(255,255,255,.92);
+        --muted: rgba(255,255,255,.72);
+        --hair: rgba(255,255,255,.12);
+        --accent: #d6b36a;
+        --good: #49d17a;
+        --shadow: 0 16px 40px rgba(0,0,0,.45);
+      }
+      * { box-sizing: border-box; }
+      body{
+        margin: 0;
+        color: var(--text);
+        background:
+          radial-gradient(1200px 600px at 20% 0%, rgba(214,179,106,.12), transparent 55%),
+          radial-gradient(900px 500px at 85% 10%, rgba(73,209,122,.09), transparent 55%),
+          linear-gradient(180deg, #090a0f, #0b0c10 35%, #080910);
+        font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+      }
+      a { color: inherit; }
+      .wrap{
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 18px 16px 40px;
+      }
+      .hero{
+        border: 1px solid var(--hair);
+        background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+        border-radius: 18px;
+        padding: 18px 18px 16px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        position: relative;
+      }
+      .hero:before{
+        content:"";
+        position:absolute;
+        inset:-2px;
+        background:
+          radial-gradient(700px 240px at 30% 0%, rgba(214,179,106,.28), transparent 60%),
+          radial-gradient(600px 220px at 90% 30%, rgba(255,255,255,.08), transparent 55%);
+        pointer-events:none;
+      }
+      .hero > * { position: relative; }
+      .brand{
+        display:flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .brand h1{
+        margin: 0;
+        font-size: 28px;
+        letter-spacing: .2px;
+      }
+      .tagline{
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 13px;
+      }
+      .pillbar{
+        display:flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+        align-items: center;
+      }
+      .btn{
+        border: 1px solid var(--hair);
+        background: rgba(255,255,255,.06);
+        color: var(--text);
+        padding: 10px 12px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 13px;
+        transition: transform .08s ease, background .15s ease;
+      }
+      .btn:hover{ background: rgba(255,255,255,.10); }
+      .btn:active{ transform: scale(.98); }
+      .btn.primary{
+        border-color: rgba(214,179,106,.55);
+        background: rgba(214,179,106,.16);
+      }
+      .filters{
+        display:flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 12px;
+      }
+      .control{
+        border: 1px solid var(--hair);
+        background: rgba(255,255,255,.05);
+        border-radius: 14px;
+        padding: 10px 12px;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 13px;
+        color: var(--text);
+      }
+      select.control, input.control{ outline: none; }
+      .chips{ display:flex; gap: 8px; flex-wrap: wrap; }
+      .chip{
+        border: 1px solid var(--hair);
+        background: rgba(255,255,255,.05);
+        padding: 8px 10px;
+        border-radius: 999px;
+        cursor:pointer;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 12px;
+        color: var(--muted);
+        user-select:none;
+      }
+      .chip.on{
+        border-color: rgba(214,179,106,.55);
+        background: rgba(214,179,106,.18);
+        color: var(--text);
+      }
+      .meta{
+        margin-top: 10px;
+        color: var(--muted);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 12px;
+      }
+      .grid{
+        margin-top: 16px;
+        display:grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .card{
+        border: 1px solid var(--hair);
+        background: rgba(255,255,255,.04);
+        border-radius: 18px;
+        padding: 16px;
+        box-shadow: 0 10px 26px rgba(0,0,0,.32);
+      }
+      .kicker{
+        display:flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        color: var(--muted);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 12px;
+      }
+      .title{
+        margin-top: 8px;
+        font-size: 22px;
+        letter-spacing: .2px;
+      }
+      .price{
+        margin-top: 10px;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .specs{
+        display:flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .spec{
+        border: 1px solid var(--hair);
+        background: rgba(255,255,255,.05);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .incentive{
+        margin-top: 12px;
+        border-left: 3px solid rgba(214,179,106,.8);
+        background: rgba(214,179,106,.10);
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 13px;
+        color: var(--text);
+      }
+      .incentive .label{
+        color: rgba(214,179,106,.95);
+        font-weight: 700;
+        letter-spacing: .2px;
+        margin-right: 6px;
+      }
+      .actions{
+        margin-top: 12px;
+        display:flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .link{
+        display:inline-flex;
+        align-items:center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--hair);
+        text-decoration:none;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 13px;
+        color: var(--text);
+        background: rgba(255,255,255,.05);
+      }
+      .link:hover{ background: rgba(255,255,255,.10); }
+      .footer{
+        margin-top: 18px;
+        color: rgba(255,255,255,.55);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 11px;
+        line-height: 1.4;
+      }
     </style>
   </head>
   <body>
-    <h1>Las Vegas New Construction</h1>
-    <button onclick="syncNow()">Sync Now</button>
-    <button onclick="loadListings()">Refresh</button>
-    <div id="meta" class="meta"></div>
-    <div id="list"></div>
+    <div class="wrap">
+      <div class="hero">
+        <div class="brand">
+          <div>
+            <h1 id="brandName">Your Name Realty</h1>
+            <div class="tagline" id="brandTagline">Las Vegas New Construction · Latest incentives & pricing</div>
+          </div>
+          <div class="pillbar">
+            <button class="btn primary" onclick="syncNow()">Sync now</button>
+            <button class="btn" onclick="loadListings()">Refresh</button>
+          </div>
+        </div>
+
+        <div class="filters" aria-label="filters">
+          <select id="cityFilter" class="control">
+            <option value="">All cities</option>
+          </select>
+
+          <div class="chips" aria-label="beds filter">
+            <div class="chip" data-beds="">Any beds</div>
+            <div class="chip" data-beds="3">3+</div>
+            <div class="chip" data-beds="4">4+</div>
+            <div class="chip" data-beds="5">5+</div>
+          </div>
+
+          <input id="minPrice" class="control" inputmode="numeric" placeholder="Min price" />
+          <input id="maxPrice" class="control" inputmode="numeric" placeholder="Max price" />
+          <button class="btn" onclick="applyFilters()">Apply</button>
+          <button class="btn" onclick="clearFilters()">Clear</button>
+        </div>
+
+        <div id="meta" class="meta"></div>
+      </div>
+
+      <div id="list" class="grid"></div>
+      <div class="footer" id="footerNote"></div>
+    </div>
 
     <script>
+      const BRAND = {
+        name: "Your Name Realty",
+        tagline: "Las Vegas New Construction · Latest incentives & pricing",
+        footer:
+          "Data is sourced from builder websites. Prices/incentives can change anytime — tap “View details” for the official listing page.",
+      };
+
+      const state = {
+        all: [],
+        filtered: [],
+        bedsMin: 0,
+      };
+
+      function money(n) {
+        const num = Number(n || 0);
+        if (!num) return "—";
+        return "$" + num.toLocaleString();
+      }
+
+      function uniqueSorted(arr) {
+        return Array.from(new Set(arr)).sort((a, b) => a.localeCompare(b));
+      }
+
+      function normalizeCity(s) {
+        return String(s || "").trim();
+      }
+
       async function loadListings() {
         const res = await fetch("/api/listings");
         const data = await res.json();
 
+        window.__lastSyncAt = data.lastSyncAt || "not yet";
         document.getElementById("meta").innerText =
-          `Count: ${data.count} | Last Sync: ${data.lastSyncAt || "not yet"}`;
+          `Showing: ${Array.isArray(data.items) ? data.items.length : 0} | Total: ${data.count} | Last Sync: ${window.__lastSyncAt}`;
 
-        const list = document.getElementById("list");
-        list.innerHTML = "";
-
-        data.items.forEach((i) => {
-          const el = document.createElement("div");
-          el.className = "card";
-          el.innerHTML = `
-            <div class="row"><b>${i.builder}</b> - ${i.community}</div>
-            <div class="row">${i.plan}</div>
-            <div class="row">$${Number(i.price).toLocaleString()} | ${i.beds}bd ${i.baths}ba | ${i.sqft} sqft</div>
-            <div class="row"><b>Incentive:</b> ${i.incentive}</div>
-            <div class="row"><a href="${i.sourceUrl}" target="_blank">Source Link</a></div>
-          `;
-          list.appendChild(el);
-        });
+        state.all = Array.isArray(data.items) ? data.items : [];
+        hydrateCityFilter(state.all);
+        applyFilters();
       }
 
       async function syncNow() {
@@ -50,6 +311,137 @@
         await loadListings();
       }
 
+      function hydrateCityFilter(items) {
+        const cities = uniqueSorted(items.map((i) => normalizeCity(i.city)).filter(Boolean));
+        const select = document.getElementById("cityFilter");
+        const current = select.value;
+        select.innerHTML = `<option value="">All cities</option>` +
+          cities.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+        select.value = cities.includes(current) ? current : "";
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function parsePriceInput(id) {
+        const raw = document.getElementById(id).value || "";
+        const cleaned = raw.replace(/[^\d]/g, "");
+        return cleaned ? Number(cleaned) : 0;
+      }
+
+      function applyFilters() {
+        const city = document.getElementById("cityFilter").value;
+        const minPrice = parsePriceInput("minPrice");
+        const maxPrice = parsePriceInput("maxPrice");
+
+        const items = state.all.filter((i) => {
+          if (city && normalizeCity(i.city) !== city) return false;
+          if (state.bedsMin && Number(i.beds || 0) < state.bedsMin) return false;
+          const p = Number(i.price || 0);
+          if (minPrice && p && p < minPrice) return false;
+          if (maxPrice && p && p > maxPrice) return false;
+          return true;
+        });
+
+        state.filtered = items;
+        render(items);
+        document.getElementById("meta").innerText =
+          `Showing: ${items.length} | Total: ${state.all.length} | Last Sync: ${window.__lastSyncAt || "—"}`;
+      }
+
+      function clearFilters() {
+        document.getElementById("cityFilter").value = "";
+        document.getElementById("minPrice").value = "";
+        document.getElementById("maxPrice").value = "";
+        state.bedsMin = 0;
+        setBedsChip("");
+        applyFilters();
+      }
+
+      function setBedsChip(val) {
+        document.querySelectorAll(".chip").forEach((el) => {
+          el.classList.toggle("on", el.dataset.beds === val);
+        });
+      }
+
+      function render(items) {
+        const list = document.getElementById("list");
+        list.innerHTML = "";
+
+        if (!items.length) {
+          const empty = document.createElement("div");
+          empty.className = "card";
+          empty.innerHTML = `<div class="kicker">No results</div><div class="title">Try clearing filters.</div>`;
+          list.appendChild(empty);
+          return;
+        }
+
+        items.forEach((i) => {
+          const el = document.createElement("div");
+          el.className = "card";
+          const city = escapeHtml(i.city || "");
+          const builder = escapeHtml(i.builder || "");
+          const community = escapeHtml(i.community || "");
+          const plan = escapeHtml(i.plan || "");
+          const incentive = (i.incentive || "").trim();
+          const sourceUrl = escapeHtml(i.sourceUrl || "#");
+
+          el.innerHTML = `
+            <div class="kicker">
+              <div>${builder} · ${community}</div>
+              <div>${city}</div>
+            </div>
+            <div class="title">${plan || "Listing"}</div>
+            <div class="price">${money(i.price)}</div>
+            <div class="specs">
+              <div class="spec">${Number(i.beds || 0) || "—"} bd</div>
+              <div class="spec">${Number(i.baths || 0) || "—"} ba</div>
+              <div class="spec">${Number(i.sqft || 0) ? Number(i.sqft).toLocaleString() : "—"} sqft</div>
+            </div>
+            ${incentive ? `<div class="incentive"><span class="label">INCENTIVE</span>${escapeHtml(incentive)}</div>` : ""}
+            <div class="actions">
+              <a class="link" href="${sourceUrl}" target="_blank" rel="noopener">View details</a>
+            </div>
+          `;
+          list.appendChild(el);
+        });
+      }
+
+      function wireEvents() {
+        document.querySelectorAll(".chip").forEach((el) => {
+          el.addEventListener("click", () => {
+            const v = el.dataset.beds || "";
+            state.bedsMin = v ? Number(v) : 0;
+            setBedsChip(v);
+            applyFilters();
+          });
+        });
+
+        document.getElementById("cityFilter").addEventListener("change", applyFilters);
+        document.getElementById("minPrice").addEventListener("keydown", (e) => {
+          if (e.key === "Enter") applyFilters();
+        });
+        document.getElementById("maxPrice").addEventListener("keydown", (e) => {
+          if (e.key === "Enter") applyFilters();
+        });
+      }
+
+      function initBrand() {
+        document.getElementById("brandName").innerText = BRAND.name;
+        document.getElementById("brandTagline").innerText = BRAND.tagline;
+        document.getElementById("footerNote").innerText = BRAND.footer;
+      }
+
+      // Init
+      initBrand();
+      setBedsChip("");
+      wireEvents();
       loadListings();
     </script>
   </body>
