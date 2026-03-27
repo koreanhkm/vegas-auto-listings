@@ -110,6 +110,14 @@
         color: var(--text);
       }
       select.control, input.control{ outline: none; }
+      select.control{
+        color-scheme: dark;
+        background-color: rgba(15,16,20,.75);
+      }
+      select.control option{
+        background-color: #0b0c10;
+        color: rgba(255,255,255,.92);
+      }
       .chips{ display:flex; gap: 8px; flex-wrap: wrap; }
       .chip{
         border: 1px solid var(--hair);
@@ -346,7 +354,7 @@
 
     <script>
       const BRAND = {
-        name: "Your Name Realty",
+        name: "Vegas Korean Homes",
         tagline: "Las Vegas New Construction · Latest incentives & pricing",
         footer:
           "Data is sourced from builder websites. Prices/incentives can change anytime — tap “View details” for the official listing page.",
