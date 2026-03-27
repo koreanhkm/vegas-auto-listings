@@ -14,6 +14,17 @@ function pickFirstString(...vals) {
   return "";
 }
 
+function pickFirstNumber(...vals) {
+  for (const val of vals) {
+    if (typeof val === "number" && Number.isFinite(val)) return val;
+    if (typeof val === "string" && val.trim()) {
+      const n = parseNumber(val);
+      if (n) return n;
+    }
+  }
+  return 0;
+}
+
 function getEnv(name, fallback = "") {
   return (process.env[name] || fallback).trim();
 }
@@ -44,12 +55,12 @@ function mapHitToListing(hit) {
   const plan = pickFirstString(hit.floor_plan, hit.title, hit.floorplan) || "";
   const city = Array.isArray(hit.cities) ? pickFirstString(hit.cities[0], "Las Vegas") : "Las Vegas";
 
-  const price = parseNumber(pickFirstString(hit.display_price, hit.min_price, hit.max_price));
+  const price = pickFirstNumber(hit.display_price, hit.min_price, hit.max_price);
   const wasPrice = 0; // not present in this index response
 
-  const beds = parseNumber(pickFirstString(hit.min_bedrooms, hit.max_bedrooms));
-  const baths = parseNumber(pickFirstString(hit.min_bathrooms, hit.max_bathrooms));
-  const sqft = parseNumber(pickFirstString(hit.min_sq_feet, hit.max_sq_feet));
+  const beds = pickFirstNumber(hit.min_bedrooms, hit.max_bedrooms);
+  const baths = pickFirstNumber(hit.min_bathrooms, hit.max_bathrooms);
+  const sqft = pickFirstNumber(hit.min_sq_feet, hit.max_sq_feet);
 
   const status = pickFirstString(hit.home_status, hit.availability_status);
   const badge = pickFirstString(hit.type, hit.tpg_status);
