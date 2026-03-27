@@ -4,11 +4,17 @@ import { fetchBuilderC } from "../connectors/builderC.js";
 import { normalizeListing } from "../utils/normalize.js";
 
 export async function runSync() {
-  const [a, b, c] = await Promise.all([
+  const results = await Promise.allSettled([
     fetchBuilderA(),
     fetchBuilderB(),
     fetchBuilderC(),
   ]);
+
+  const [a, b, c] = results.map((r, idx) => {
+    if (r.status === "fulfilled") return r.value;
+    console.warn(`[SYNC] connector ${idx + 1} failed: ${r.reason?.message || r.reason}`);
+    return [];
+  });
 
   const merged = [...a, ...b, ...c].map(normalizeListing);
 
