@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vegas New Home Listings</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; max-width: 900px; }
+      h1 { margin-bottom: 8px; }
+      button { padding: 8px 12px; margin-right: 8px; cursor: pointer; }
+      .meta { color: #555; margin: 10px 0 20px; }
+      .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; margin: 10px 0; }
+      .row { margin: 4px 0; }
+      a { color: #0b57d0; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <h1>Las Vegas New Construction</h1>
+    <button onclick="syncNow()">Sync Now</button>
+    <button onclick="loadListings()">Refresh</button>
+    <div id="meta" class="meta"></div>
+    <div id="list"></div>
+
+    <script>
+      async function loadListings() {
+        const res = await fetch("/api/listings");
+        const data = await res.json();
+
+        document.getElementById("meta").innerText =
+          `Count: ${data.count} | Last Sync: ${data.lastSyncAt || "not yet"}`;
+
+        const list = document.getElementById("list");
+        list.innerHTML = "";
+
+        data.items.forEach((i) => {
+          const el = document.createElement("div");
+          el.className = "card";
+          el.innerHTML = `
+            <div class="row"><b>${i.builder}</b> - ${i.community}</div>
+            <div class="row">${i.plan}</div>
+            <div class="row">$${Number(i.price).toLocaleString()} | ${i.beds}bd ${i.baths}ba | ${i.sqft} sqft</div>
+            <div class="row"><b>Incentive:</b> ${i.incentive}</div>
+            <div class="row"><a href="${i.sourceUrl}" target="_blank">Source Link</a></div>
+          `;
+          list.appendChild(el);
+        });
+      }
+
+      async function syncNow() {
+        await fetch("/api/sync", { method: "POST" });
+        await loadListings();
+      }
+
+      loadListings();
+    </script>
+  </body>
+</html>
